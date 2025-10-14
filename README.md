@@ -1,3 +1,18 @@
+
+# Fusion Tokamak Neutronics and Tritium Breeding Modelling Project
+
+*Masters project by Vadan Khan and Rhodri Peters*
+
+**Project aims: To model and optimise tokamak reactors for optimum tritium breeding ratios.**
+
+
+
+---
+
+### [original project documentation]: 
+
+---
+
 [![Jupyter Book Badge](https://jupyterbook.org/badge.svg)](https://fusion-energy.github.io/neutronics-workshop/)
 
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/fusion-energy/neutronics-workshop/HEAD)
