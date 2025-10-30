@@ -1,0 +1,43 @@
+#NB 7% Li6 from previous study is optimal
+
+
+( liquid_lithium(7% Li6), Helium, Zirconium, Graphite )
+TBR=1.5873550399607135 with standard deviation of 0.015906265014296022
+Heating=11.846972594984459MeV per source neutron with standard deviation of 101576.76169972529
+damage=40026.79708442389 with standard deviation of 1320.2030656258705
+
+( liquid_lithium(7% Li6), Water, Zirconium, Graphite )
+TBR=1.130108777618751 with standard deviation of 0.013663750433894627
+Heating=8.154634823403258MeV per source neutron with standard deviation of 86076.71724913278
+damage=17624.080593485352 with standard deviation of 851.9729666417533
+
+( liquid_lithium(7% Li6), Helium, tungsten, Graphite )
+TBR=1.3865822584232794 with standard deviation of 0.015415362085420757
+Heating=9.375169755629498MeV per source neutron with standard deviation of 91130.85995859692
+damage=27864.923524084985 with standard deviation of 1043.290053163938
+
+( liquid_lithium(7% Li6), Helium, steel, Graphite )
+TBR=1.3314562585270917 with standard deviation of 0.01747425628095933
+Heating=9.529783987122537MeV per source neutron with standard deviation of 108146.27678049133
+damage=28624.60727782697 with standard deviation of 1285.12495420677
+
+( liquid_lithium(7% Li6), Helium, SiC, Graphite )
+TBR=1.2423736460283223 with standard deviation of 0.014426366297744585
+Heating=9.76155343773961MeV per source neutron with standard deviation of 102775.02583874408
+damage=29635.26545852604 with standard deviation of 1273.8310102841351
+
+( liquid_lithium(7% Li6), Water, tungsten, Graphite )
+TBR=0.8825003536270735 with standard deviation of 0.018152506461773608
+Heating=5.906440964466539MeV per source neutron with standard deviation of 104888.45527095313
+damage=10723.870672350942 with standard deviation of 846.7614094304112
+
+( liquid_lithium(7% Li6), Helium, Zirconium, Tungsten )
+TBR=1.4669254222626666 with standard deviation of 0.014170301976721391
+Heating=11.262597946005029MeV per source neutron with standard deviation of 89984.14762043198
+damage=40920.688233496534 with standard deviation of 1622.1986676851322
+
+#OPTIMUM COMBO
+( liquid_lithium(7% Li6), Helium, Zirconium, Beryllium )
+TBR=1.596655638269928 with standard deviation of 0.01300479507066544
+Heating=11.864917439624916MeV per source neutron with standard deviation of 80625.3547893572
+damage=40606.22802427935 with standard deviation of 1428.6789488775037
