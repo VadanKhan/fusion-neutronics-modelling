@@ -3,7 +3,7 @@ import openmc.plotter
 import paramak
 from cad_to_dagmc import CadToDagmc
 from pathlib import Path
-import os
+# import os
 
 # --- Step 0: Setup ---
 # Set path for cross-sections.
@@ -11,6 +11,11 @@ import os
 # as noted in your environment.
 openmc.config['cross_sections'] = Path.home() / 'nuclear_data' / 'cross_sections.xml'
 print(f"Set openmc.config['cross_sections'] to {openmc.config['cross_sections']}")
+
+# --- NEW: Define and create the output directory ---
+output_dir = Path.cwd() / "outputs"
+output_dir.mkdir(parents=True, exist_ok=True)
+print(f"All outputs will be saved to: {output_dir}")
 
 # We no longer need the os.environ check from the previous version.
 
@@ -54,12 +59,13 @@ my_reactor = paramak.tokamak(
     triangularity=0.55,
     rotation_angle=180,
     colors={
-        'layer_1':(0.4, 0.9, 0.4),  # center column
-        'layer_2':(0.6, 0.8, 0.6),  # magnet shield
-        'layer_3':(0.1, 0.8, 0.6),  # first wall
-        'layer_4':(0.1, 0.1, 0.9),  # breeder
-        'layer_5':(0.4, 0.4, 0.8),  # rear wall
-        'plasma':(1., 0.7, 0.8, 0.6),  # plasma has 4 numbers as the last number is the transparency
+        'layer_1': (0.4, 0.9, 0.4),  # center column
+        'layer_2': (0.6, 0.8, 0.6),  # magnet shield
+        'layer_3': (0.1, 0.8, 0.6),  # first wall
+        'layer_4': (0.1, 0.1, 0.9),  # breeder
+        'layer_5': (0.4, 0.4, 0.8),  # rear wall
+        # plasma has 4 numbers as the last number is the transparency
+        'plasma': (1., 0.7, 0.8, 0.6),
     },
 )
 
@@ -85,13 +91,13 @@ converter.add_cadquery_object(
     material_tags=reactor_material_tags
 )
 
-h5m_filename = "dagmc_reactor.h5m"
+h5m_filename = output_dir / "dagmc_reactor.h5m"
 
 # Export the DAGMC .h5m file
 # Using a coarse mesh for speed. For real physics, you'd need finer meshes.
 # FIX 2: Removed 'verbose=False' as per user feedback
 converter.export_dagmc_h5m_file(
-    filename=h5m_filename,
+    filename=str(h5m_filename),
     max_mesh_size=20.0,
     min_mesh_size=5.0
 )
@@ -105,23 +111,23 @@ materials_list = []
 for tag in reactor_material_tags:
     # Create a new material with the *exact* name as the tag
     mat = openmc.Material(name=tag)
-    
+
     # In a real model, you'd add specific elements based on the tag
     # The 'paramak.tokamak' builder tags the plasma as 'plasma'
     # and other layers as 'radial_layer_1', 'vertical_layer_1' etc.
     if tag == 'plasma':
-        mat.add_element('H', 1.0, 'ao') # Dummy plasma
+        mat.add_element('H', 1.0, 'ao')  # Dummy plasma
         mat.set_density('g/cm3', 1.0e-6)
     else:
         # Default for all other solid layers
-        mat.add_element('Fe', 1.0, 'ao') # Dummy steel
+        mat.add_element('Fe', 1.0, 'ao')  # Dummy steel
         mat.set_density('g/cm3', 7.8)
-        
+
     materials_list.append(mat)
 
 # Create the final Materials collection
 my_materials = openmc.Materials(materials_list)
-my_materials.export_to_xml()
+# my_materials.export_to_xml()
 
 
 # --- Step 4: Define OpenMC Geometry ---
@@ -130,13 +136,15 @@ print("Defining OpenMC geometry...")
 
 # Create the DAGMC Universe
 # --- FIX 1 (from error): Set auto_geom_ids=True to resolve cell ID conflict ---
-dag_univ = openmc.DAGMCUniverse(filename=h5m_filename, auto_geom_ids=True)
+dag_univ = openmc.DAGMCUniverse(
+    filename=str(h5m_filename),
+    auto_geom_ids=True)  # <-- Convert to string
 
 # FIX 2: Define a large, static bounding box (in cm)
 # This is the robust method from '1_cad_model_simulation_minimal.ipynb'
 # It avoids the need to dynamically query the (failing) .val() method.
 # We pick a size (12m) that will safely contain the ~7.5m radius reactor.
-max_boundary = 1200.0 
+max_boundary = 1200.0
 
 # Because we made a 180-degree sector (cut on the Y=0 plane),
 # we must set a reflective boundary on that plane.
@@ -150,7 +158,7 @@ max_z = max_boundary
 # Define the bounding surfaces
 x_min_surf = openmc.XPlane(min_x, boundary_type='vacuum')
 x_max_surf = openmc.XPlane(max_x, boundary_type='vacuum')
-y_min_surf = openmc.YPlane(min_y, boundary_type='reflective') # <-- REFLECTIVE
+y_min_surf = openmc.YPlane(min_y, boundary_type='reflective')  # <-- REFLECTIVE
 y_max_surf = openmc.YPlane(max_y, boundary_type='vacuum')
 z_min_surf = openmc.ZPlane(min_z, boundary_type='vacuum')
 z_max_surf = openmc.ZPlane(max_z, boundary_type='vacuum')
@@ -164,7 +172,7 @@ bounding_cell = openmc.Cell(
 
 # !!!
 my_geometry = openmc.Geometry([bounding_cell])
-my_geometry.export_to_xml()
+# my_geometry.export_to_xml()
 
 
 # --- Step 5: Define OpenMC Settings & Source ---
@@ -190,45 +198,45 @@ source_location = (approx_major_radius, 0.01, 0.0)
 my_source = openmc.IndependentSource()
 my_source.space = openmc.stats.Point(source_location)
 my_source.angle = openmc.stats.Isotropic()
-my_source.energy = openmc.stats.Discrete([14.1e6], [1.0]) # 14.1 MeV neutrons
+my_source.energy = openmc.stats.Discrete([14.1e6], [1.0])  # 14.1 MeV neutrons
 
 my_settings = openmc.Settings()
 my_settings.batches = 10
 my_settings.particles = 500
 my_settings.run_mode = 'fixed source'
 my_settings.source = my_source
-my_settings.export_to_xml()
+# my_settings.export_to_xml()
 
 
 # --- Step 6: Plotting (Answering Q2) --- !!!
 # This answers your question about viewing the geometry in OpenMC
 print("Creating geometry plots...")
 plot_xy = openmc.Plot()
-plot_xy.filename = 'reactor_plot_xy'
+plot_xy.filename = str(output_dir / 'reactor_plot_xy')
 # Use our static boundary for the plot width
 plot_xy.width = (max_boundary * 2, max_boundary * 2)
 plot_xy.pixels = (1000, 1000)
 plot_xy.basis = 'xy'
 plot_xy.origin = (0, 0, 0)
 plot_xy.color_by = 'material'
-plot_xy.colors = {mat: 'gray' for mat in materials_list} # Simple colors
+plot_xy.colors = {mat: 'gray' for mat in materials_list}  # Simple colors
 
 # Plot from a different basis (side view)
 plot_xz = openmc.Plot()
-plot_xz.filename = 'reactor_plot_xz'
+plot_xz.filename = str(output_dir / 'reactor_plot_xz')
 # Use our static boundary for the plot width
-plot_xz.width = (max_boundary * 2, max_boundary * 2) 
+plot_xz.width = (max_boundary * 2, max_boundary * 2)
 plot_xz.pixels = (1000, 1000)
 plot_xz.basis = 'xz'
 plot_xz.origin = (0, 0, 0)
 plot_xz.color_by = 'material'
 
 plots = openmc.Plots([plot_xy, plot_xz])
-plots.export_to_xml()
+plots.export_to_xml(path=str(output_dir / 'plots.xml'))
 
 # Run the plotting
-openmc.plot_geometry()
-print("Plots created: reactor_plot_xy.png, reactor_plot_xz.png")
+openmc.plot_geometry(cwd=str(output_dir))
+print(f"Plots created in {output_dir}: reactor_plot_xy.png, reactor_plot_xz.png")
 
 
 # --- Step 7: Run Simulation ---
@@ -240,10 +248,8 @@ my_model = openmc.Model(
     materials=my_materials,
     settings=my_settings
 )
-model_path = my_model.run()
+model_path = my_model.run(cwd=str(output_dir))
 print(f"Simulation run complete. Results in {model_path}")
 
 
 print("\nWorkflow complete.")
-
-
